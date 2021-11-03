@@ -1,15 +1,29 @@
 const express = require('express');
 const app = express();
 const axios = require('axios');
+const cors = require('cors');
 const { inRange, toUpper } = require('lodash');
+const chalk = require('chalk');
 
 const redisWrapper = require('./redis-wrapper');
 const { getCachedValue, setCachedValue } = redisWrapper;
 
 const ASCIIFolder = require('fold-to-ascii'); // for input sanitization.
 
-/*
+const whitelist = ['http://localhost:3000'];
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || whitelist.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+};
+app.use(cors(corsOptions));
 
+/*
  https://www.exchangerate-api.com/docs/free
  heavily rate limited
  implementing a caching strategy to store responses
@@ -39,7 +53,11 @@ app.get('/currency-delta', (req, res) => {
       .get(`${EXCHANGE_RATE_API}/${baseCurrency}`)
       .then(function (apiResponse) {
         const currencyResponse = apiResponse.data;
-        console.log('currencyResponse successfully retrieved from the API');
+        console.log(
+          chalk.green(
+            'currencyResponse successfully retrieved from the API ✅ '
+          )
+        );
         res.status(200).send(currencyResponse);
       });
   } catch (err) {
@@ -47,7 +65,7 @@ app.get('/currency-delta', (req, res) => {
   }
 });
 
-const fetchAndUpdateCache = async ({ key }) => {
+const fetchAndUpdateCache = async ({ key }, res) => {
   /*
        Not found in cache
        Make new HTTP request
@@ -79,10 +97,16 @@ const fetchAndUpdateCache = async ({ key }) => {
        */
       setCachedValue({ key, value: currencyResponse });
       console.log(
-        `Retrieved from the open.er-api.com API, currencyResponse : ${currencyResponse}`
+        chalk.green(
+          `Retrieved from the open.er-api.com API ✅ , currencyResponse : ${chalk.bgWhite(
+            JSON.stringify(currencyResponse, null, 2)
+          )}`
+        )
       );
-      console.log(`Redis cache updated with response, with key : ${key}`);
-      res.status(200).send(JSON.stringify(currencyResponse));
+      console.log(
+        chalk.green(`Redis cache updated with response, with key : ${key}`)
+      );
+      res.status(200).send(currencyResponse);
     }
   });
 };
@@ -98,9 +122,15 @@ app.get('/cached-currency-delta', async (req, res) => {
   const baseCurrency = ASCIIFolder.foldReplacing(toUpper(req.query.base));
 
   try {
-     getCachedValue({ key: baseCurrency }).then(
+    getCachedValue({ key: baseCurrency }).then(
       (cachedResponse) => {
-        console.log(`cachedResponse  found in cache, ${cachedResponse}`);
+        console.log(
+          chalk.green(
+            `cachedResponse  found in cache, ${chalk.bgWhite(
+              JSON.stringify(cachedResponse, null, 2)
+            )}`
+          )
+        );
         /*
           api returns this metadata
           around how current the response is.
@@ -108,25 +138,46 @@ app.get('/cached-currency-delta', async (req, res) => {
           "time_last_update_unix": 1585872397
           "time_next_update_unix": 1585959987
       */
-        const isCacheCurrent = cachedCurrencyResponse
-          ? inRange(
-              Date.now(), // returns a unix timestamp of when the request was made.
-              cachedCurrencyResponse.time_last_update_unix,
-              cachedCurrencyResponse.time_next_update_unix
-            )
-          : false;
+        const nowUnixTimestamp = Math.floor(Date.now() / 1000);
+
+        const isCacheCurrent =
+          cachedResponse &&
+          inRange(
+            nowUnixTimestamp, // returns a unix timestamp of when the request was made.
+            JSON.parse(cachedResponse).time_last_update_unix,
+            JSON.parse(cachedResponse).time_next_update_unix
+          );
+
+        console.log('Date.now()', nowUnixTimestamp);
+        console.log(
+          'time_last_update_unix',
+          cachedResponse && JSON.parse(cachedResponse).time_last_update_unix
+        );
+        console.log(
+          'time_next_update_unix',
+          cachedResponse && JSON.parse(cachedResponse).time_next_update_unix
+        );
+        console.log('isCacheCurrent, ', isCacheCurrent);
 
         if (isCacheCurrent) {
-          res.status(200).send(JSON.stringify(cachedCurrencyResponse));
+          console.log('returning cached response to client.');
+          res.status(200).send(cachedResponse);
         } else {
+          console.log(
+            'cached response not found, getting new response and updating cache.'
+          );
           // case -> cache is not up to date anymore, force refresh/bust cache.
-          fetchAndUpdateCache({ key: baseCurrency });
+          fetchAndUpdateCache({ key: baseCurrency }, res);
         }
       },
       (reason) => {
         // case -> not found in cache at all, get new response from api.
-        console.error(`cachedResponse not found in cache, ${reason}`);
-        fetchAndUpdateCache({ key: baseCurrency });
+        console.log(
+          chalk.yellow(
+            `cachedResponse not found in cache, ${chalk.bgWhite(reason)}`
+          )
+        );
+        fetchAndUpdateCache({ key: baseCurrency }, res);
       }
     );
   } catch (err) {
@@ -137,5 +188,5 @@ app.get('/cached-currency-delta', async (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`🎧 Server started at port: ${PORT}`);
+  console.log(chalk.cyan(`🎧 Server started at port: ${chalk.bgWhite(PORT)}`));
 });

@@ -1,11 +1,13 @@
-const client = require('redis').createClient(6379);
+const client = require('redis').createClient(process.env.REDIS_URL);
+const chalk = require('chalk');
 
 client.on('connect', () => {
-  console.log('Redis client connected');
+  console.log(chalk.green('Redis client connected 🚀 '));
 });
 
 client.on('error', (error) => {
-  console.error(error);
+  console.log(chalk.red('Redis client connected 🔌 '));
+  console.log(chalk.bgWhite(error));
 });
 
 /*
@@ -17,9 +19,12 @@ const getCachedValue = async ({ key }) => {
   return new Promise((resolve, reject) => {
     client.get(key, (err, res) => {
       if (err) {
-        console.error(err);
+        console.log(chalk.yellow('error retrieving cached value 🚧'));
+        console.log(chalk.bgWhite(error));
         reject(err);
       } else {
+        console.log(chalk.green('success retrieving cached value 🙌'));
+        console.log(chalk.bgWhite(res));
         resolve(res);
       }
     });
@@ -34,11 +39,14 @@ const getCachedValue = async ({ key }) => {
 */
 const setCachedValue = async ({ key, value, ttl = ONE_WEEK } = {}) => {
   return new Promise((resolve, reject) => {
-    client.setex(key, ttl, value, (err, res) => {
+    client.setex(key, ttl, JSON.stringify(value), (err, res) => {
       if (err) {
-        console.error(err);
+        console.log(chalk.yellow('error setting cached value in redis 🚧'));
+        console.log(chalk.bgWhite(error));
         reject(err);
       } else {
+        console.log(chalk.green('success setting cached value 🙌'));
+        console.log(chalk.bgWhite(res));
         resolve(res);
       }
     });
