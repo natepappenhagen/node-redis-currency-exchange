@@ -23,6 +23,8 @@ const ConvertCurrency = () => {
 
   const [fromCurrency, setFromCurrency] = useState('USD');
   const [toCurrency, setToCurrency] = useState('USD');
+  const [defaultCurrencyDropdownOptions, setDefaultCurrencyDropdownOptions] =
+    useState([]);
 
   const ONE_HOUR = 3600;
 
@@ -80,15 +82,16 @@ const ConvertCurrency = () => {
         baseCurrency: fromCurrency,
       },
       {
-        /*
-        https://react-query.tanstack.com/guides/initial-query-data#staletime-and-initialdataupdatedat
-        
-        queries are considered "stale" by default, I'm increasing that to ONE_HOUR
-        to make the client less chatty with the back end, since the data is only updated once a day.
-        */
         staleTime: ONE_HOUR,
         cacheTime: ONE_HOUR,
         enabled: Boolean(fromCurrency),
+        onSuccess: (data) => {
+          if (fromCurrency === 'USD') {
+            // hold on to some dropdown options in the event that "None"
+            //  is selected and we don't have any anymore.
+            setDefaultCurrencyDropdownOptions(Object.keys(data.rates));
+          }
+        },
       }
     );
 
@@ -99,13 +102,10 @@ const ConvertCurrency = () => {
   /*
      when the user sets the dropdown to "None",
      we lose the currency dropdown options from the response.
-     so we re-populate our options from the cache, from the inital page load.
+     so we re-populate our options from the initial response's rates payload.
   */
   if (fromCurrency === '') {
-    const cachedUsdResponse =
-      queryClient.getQueriesData('USDbaseCurrency')[0][1];
-    console.log('cachedQuery', cachedUsdResponse);
-    currencyRates = cachedUsdResponse && Object.keys(cachedUsdResponse.rates);
+    currencyRates = defaultCurrencyDropdownOptions;
   }
 
   const convertFromTo = () => {
