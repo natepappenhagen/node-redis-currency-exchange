@@ -63,6 +63,9 @@ This will :
 - add translation files for text to make evoloving into other languages simple.
 - add commas to the output text fields.
 - add 'reset' button.
+- add tests
+- consider replacing the two useEffects with an Observable stream that 
+  could reduce unintended side effects from the useEffects.
 - package up the front end into a standalone component that could be imported and consumed.
 
 **back end**:

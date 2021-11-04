@@ -164,17 +164,15 @@ app.get('/cached-currency-delta', async (req, res) => {
           res.status(200).send(cachedResponse);
         } else {
           console.log(
-            'cached response not found, getting new response and updating cache.'
+            'cache found but is not fresh, invalidating cache cache, requesting new api response & updating the cache.'
           );
-          // case -> cache is not up to date anymore, force refresh/bust cache.
           fetchAndUpdateCache({ key: baseCurrency }, res);
         }
       },
       (reason) => {
-        // case -> not found in cache at all, get new response from api.
         console.log(
           chalk.yellow(
-            `cachedResponse not found in cache, ${chalk.bgWhite(reason)}`
+            `cachedResponse not found in cache, requesting response from 3rd party api, ${chalk.bgWhite(reason)}`
           )
         );
         fetchAndUpdateCache({ key: baseCurrency }, res);
