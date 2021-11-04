@@ -12,15 +12,11 @@ import useGetCurrencyConversions from '../hooks/useGetCurrencyConversions';
 import CurrencyDropdown from './CurrencyDropdown';
 import getSymbolFromCurrency from 'currency-symbol-map';
 import currencyCodes from 'currency-codes';
-import { useQueryClient } from 'react-query';
 import Big from 'big.js';
 
 const ConvertCurrency = () => {
-  const queryClient = useQueryClient();
-
   const [fromValue, setFromValue] = useState(1);
   const [toValue, setToValue] = useState(1);
-
   const [fromCurrency, setFromCurrency] = useState('USD');
   const [toCurrency, setToCurrency] = useState('USD');
   const [defaultCurrencyDropdownOptions, setDefaultCurrencyDropdownOptions] =
@@ -43,37 +39,26 @@ const ConvertCurrency = () => {
     const cleanedNumber = new Big(floatToHandle.toString())
       .toPrecision(5)
       .toString();
-    console.log('big', cleanedNumber);
     console.log('floatToReturn', parseFloat(cleanedNumber));
     return parseFloat(cleanedNumber);
   };
 
   const handleFromValueChange = (e) => {
-    if (e.target.value === '') {
+    let input = e.target.value;
+    if (input === '') {
       return setFromValue('');
     }
-    console.log('fromValueChange', e.target.value);
-    console.log('parseFloat(fromValueChange)', parseFloat(e.target.value));
-    console.log(
-      'parseFloat(fromValueChange.toString())',
-      parseFloat(e.target.value.toString())
-    );
-    const inputWithSaneFloatingPoints = handleFloatingPoints(e.target.value);
-    setFromValue(parseFloat(inputWithSaneFloatingPoints));
+    console.log('parseFloat(input.toString())', parseFloat(input.toString()));
+    setFromValue(parseFloat(handleFloatingPoints(input)));
   };
 
   const handleToValueChange = (e) => {
-    if (e.target.value === '') {
+    let input = e.target.value;
+    if (input === '') {
       return setToValue('');
     }
-    console.log('toValueChange', e.target.value);
-    console.log('parseFloat(toValueChange)', parseFloat(e.target.value));
-    console.log(
-      'parseFloat(toValueChange.toString())',
-      parseFloat(e.target.value.toString())
-    );
-    const inputWithSaneFloatingPoints = handleFloatingPoints(e.target.value);
-    setToValue(inputWithSaneFloatingPoints);
+    console.log('parseFloat(input.toString())', parseFloat(input.toString()));
+    setToValue(handleFloatingPoints(input));
   };
 
   const { data: currenciesResponse, isLoading: isCurrencyLoading } =
@@ -82,8 +67,6 @@ const ConvertCurrency = () => {
         baseCurrency: fromCurrency,
       },
       {
-        staleTime: ONE_HOUR,
-        cacheTime: ONE_HOUR,
         enabled: Boolean(fromCurrency),
         onSuccess: (data) => {
           if (fromCurrency === 'USD') {
@@ -137,7 +120,7 @@ const ConvertCurrency = () => {
   return (
     <Container className="cache-it-container" fixed>
       <h1>
-        <Typography>cache-it</Typography>
+        <Typography>cache-it 🧺</Typography>
       </h1>
       <Paper className="cache-it-paper" variant="outlined" elavation={1}>
         <Grid container spacing={3}>
