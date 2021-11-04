@@ -24,6 +24,8 @@ const ConvertCurrency = () => {
   const [fromCurrency, setFromCurrency] = useState('USD');
   const [toCurrency, setToCurrency] = useState('USD');
 
+  const ONE_HOUR = 3600;
+
   const handleFromCurrencyChange = (e) => {
     setFromCurrency(e.target.value);
   };
@@ -57,6 +59,8 @@ const ConvertCurrency = () => {
   };
 
   const handleToValueChange = (e) => {
+    // to handle when the input is empty/clearing.
+    // good TODO: would be to have a 'reset' button.
     if (e.target.value === '') {
       return setToValue('');
     }
@@ -76,13 +80,14 @@ const ConvertCurrency = () => {
         baseCurrency: fromCurrency,
       },
       {
-        cacheTime: 86400,
+        staleTime: ONE_HOUR,
+        cacheTime: ONE_HOUR,
         enabled: Boolean(fromCurrency),
       }
     );
 
   let currencyRates = currenciesResponse
-    ? Object.keys(currenciesResponse?.rates)
+    ? Object.keys(currenciesResponse.rates)
     : [];
 
   /*
@@ -90,7 +95,6 @@ const ConvertCurrency = () => {
      we lose the currency dropdown options from the response.
      so we re-populate our options from the cache, from the inital page load.
   */
-
   if (fromCurrency === '') {
     const cachedUsdResponse =
       queryClient.getQueriesData('USDbaseCurrency')[0][1];
@@ -99,31 +103,20 @@ const ConvertCurrency = () => {
   }
 
   const convertFromTo = () => {
-    const fromRate =
-      currenciesResponse &&
-      fromCurrency &&
-      currenciesResponse.rates[fromCurrency];
+    if (currenciesResponse && fromCurrency && toCurrency){
+    const fromRate = currenciesResponse.rates[fromCurrency];
     const valueDividedByRate = fromValue / fromRate;
-    const toRate =
-      currenciesResponse &&
-      fromCurrency &&
-      currenciesResponse.rates[toCurrency];
-    const convertedTo = valueDividedByRate * toRate;
-    setToValue(handleFloatingPoints(convertedTo));
+    const toRate = currenciesResponse.rates[toCurrency];
+    setToValue(handleFloatingPoints(valueDividedByRate * toRate));
+    } 
   };
 
   const convertToFrom = () => {
-    const toRate =
-      currenciesResponse &&
-      fromCurrency &&
-      currenciesResponse.rates[toCurrency];
+    if (currenciesResponse && fromCurrency && toCurrency){
+    const toRate = currenciesResponse.rates[toCurrency];
     const valueDividedByRate = toValue / toRate;
-    const fromRate =
-      currenciesResponse &&
-      fromCurrency &&
-      currenciesResponse.rates[fromCurrency];
-    const convertedTo = valueDividedByRate * fromRate;
-    setFromValue(handleFloatingPoints(convertedTo));
+    const fromRate = currenciesResponse.rates[fromCurrency];
+    setFromValue(handleFloatingPoints(valueDividedByRate * fromRate));
   };
 
   useEffect(() => {
@@ -136,7 +129,7 @@ const ConvertCurrency = () => {
 
   return (
     <Container className="cache-it-container" fixed>
-      <h1>cache it</h1>
+      <h1>cache-it</h1>
       <Paper className="cache-it-paper" variant="outlined" elavation={1}>
         <Grid container spacing={3}>
           <Grid item xs={6}>
