@@ -22,8 +22,6 @@ const ConvertCurrency = () => {
   const [defaultCurrencyDropdownOptions, setDefaultCurrencyDropdownOptions] =
     useState([]);
 
-  const ONE_HOUR = 3600;
-
   const handleFromCurrencyChange = (e) => {
     setFromCurrency(e.target.value);
   };
@@ -44,7 +42,7 @@ const ConvertCurrency = () => {
   };
 
   const handleFromValueChange = (e) => {
-    let input = e.target.value;
+    const input = e.target.value;
     if (input === '') {
       return setFromValue('');
     }
@@ -53,7 +51,7 @@ const ConvertCurrency = () => {
   };
 
   const handleToValueChange = (e) => {
-    let input = e.target.value;
+    const input = e.target.value;
     if (input === '') {
       return setToValue('');
     }

@@ -9,7 +9,7 @@
   - caching on the back end is done with redis
 - front end client is built with ReactJS
   - caching on the front end is done with react-query
-- docker & docker-compose stich all the builds and run all apps in unison.
+- docker & docker-compose stitch all the builds and run all apps in unison.
 
 <div align="center">
 <a title="NodeJS" href="httpshttps://nodejs.org/en/"><img src="https://img.icons8.com/color/48/000000/docker.png"/></a>

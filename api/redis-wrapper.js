@@ -6,7 +6,7 @@ client.on('connect', () => {
 });
 
 client.on('error', (error) => {
-  console.log(chalk.red('Redis client connected 🔌 '));
+  console.log(chalk.red('Redis client disconnected 🔌 '));
   console.log(chalk.bgWhite(error));
 });
 
