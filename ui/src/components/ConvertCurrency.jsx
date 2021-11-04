@@ -38,10 +38,12 @@ const ConvertCurrency = () => {
     if (floatToHandle === '' || isNaN(floatToHandle)) {
       return 0;
     }
-    const n = new Big(floatToHandle.toString()).toPrecision(5).toString();
-    console.log('big', n);
-    console.log('floatToReturn', parseFloat(n));
-    return parseFloat(n);
+    const cleanedNumber = new Big(floatToHandle.toString())
+      .toPrecision(5)
+      .toString();
+    console.log('big', cleanedNumber);
+    console.log('floatToReturn', parseFloat(cleanedNumber));
+    return parseFloat(cleanedNumber);
   };
 
   const handleFromValueChange = (e) => {
@@ -59,8 +61,6 @@ const ConvertCurrency = () => {
   };
 
   const handleToValueChange = (e) => {
-    // to handle when the input is empty/clearing.
-    // good TODO: would be to have a 'reset' button.
     if (e.target.value === '') {
       return setToValue('');
     }
@@ -80,6 +80,12 @@ const ConvertCurrency = () => {
         baseCurrency: fromCurrency,
       },
       {
+        /*
+        https://react-query.tanstack.com/guides/initial-query-data#staletime-and-initialdataupdatedat
+        
+        queries are considered "stale" by default, I'm increasing that to ONE_HOUR
+        to make the client less chatty with the back end, since the data is only updated once a day.
+        */
         staleTime: ONE_HOUR,
         cacheTime: ONE_HOUR,
         enabled: Boolean(fromCurrency),
@@ -103,20 +109,21 @@ const ConvertCurrency = () => {
   }
 
   const convertFromTo = () => {
-    if (currenciesResponse && fromCurrency && toCurrency){
-    const fromRate = currenciesResponse.rates[fromCurrency];
-    const valueDividedByRate = fromValue / fromRate;
-    const toRate = currenciesResponse.rates[toCurrency];
-    setToValue(handleFloatingPoints(valueDividedByRate * toRate));
-    } 
+    if (currenciesResponse && fromCurrency && toCurrency) {
+      const fromRate = currenciesResponse.rates[fromCurrency];
+      const valueDividedByRate = fromValue / fromRate;
+      const toRate = currenciesResponse.rates[toCurrency];
+      setToValue(handleFloatingPoints(valueDividedByRate * toRate));
+    }
   };
 
   const convertToFrom = () => {
-    if (currenciesResponse && fromCurrency && toCurrency){
-    const toRate = currenciesResponse.rates[toCurrency];
-    const valueDividedByRate = toValue / toRate;
-    const fromRate = currenciesResponse.rates[fromCurrency];
-    setFromValue(handleFloatingPoints(valueDividedByRate * fromRate));
+    if (currenciesResponse && fromCurrency && toCurrency) {
+      const toRate = currenciesResponse.rates[toCurrency];
+      const valueDividedByRate = toValue / toRate;
+      const fromRate = currenciesResponse.rates[fromCurrency];
+      setFromValue(handleFloatingPoints(valueDividedByRate * fromRate));
+    }
   };
 
   useEffect(() => {
@@ -129,7 +136,9 @@ const ConvertCurrency = () => {
 
   return (
     <Container className="cache-it-container" fixed>
-      <h1>cache-it</h1>
+      <h1>
+        <Typography>cache-it</Typography>
+      </h1>
       <Paper className="cache-it-paper" variant="outlined" elavation={1}>
         <Grid container spacing={3}>
           <Grid item xs={6}>
