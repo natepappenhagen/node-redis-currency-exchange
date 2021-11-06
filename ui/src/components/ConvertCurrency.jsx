@@ -22,14 +22,6 @@ const ConvertCurrency = () => {
   const [defaultCurrencyDropdownOptions, setDefaultCurrencyDropdownOptions] =
     useState([]);
 
-  const handleFromCurrencyChange = (e) => {
-    setFromCurrency(e.target.value);
-  };
-
-  const handleToCurrencyChange = (e) => {
-    setToCurrency(e.target.value);
-  };
-
   const handleFloatingPoints = (floatToHandle) => {
     if (floatToHandle === '' || isNaN(floatToHandle)) {
       return 0;
@@ -41,22 +33,9 @@ const ConvertCurrency = () => {
     return parseFloat(cleanedNumber);
   };
 
-  const handleFromValueChange = (e) => {
-    const input = e.target.value;
-    if (input === '') {
-      return setFromValue('');
-    }
-    console.log('parseFloat(input.toString())', parseFloat(input.toString()));
-    setFromValue(parseFloat(handleFloatingPoints(input)));
-  };
-
-  const handleToValueChange = (e) => {
-    const input = e.target.value;
-    if (input === '') {
-      return setToValue('');
-    }
-    console.log('parseFloat(input.toString())', parseFloat(input.toString()));
-    setToValue(handleFloatingPoints(input));
+  const VARIANTS = {
+    to: 'to',
+    from: 'from',
   };
 
   const { data: currenciesResponse, isLoading: isCurrencyLoading } =
@@ -89,31 +68,35 @@ const ConvertCurrency = () => {
     currencyRates = defaultCurrencyDropdownOptions;
   }
 
-  const convertFromTo = () => {
-    if (currenciesResponse && fromCurrency && toCurrency) {
-      const fromRate = currenciesResponse.rates[fromCurrency];
-      const valueDividedByRate = fromValue / fromRate;
-      const toRate = currenciesResponse.rates[toCurrency];
-      setToValue(handleFloatingPoints(valueDividedByRate * toRate));
+  const handleConversion = ({ input: e, variant }) => {
+    const input = e.target.value;
+    if (input === '') {
+      setToValue('');
+      setFromValue('');
+      return;
     }
+    const FROM_RATE = currenciesResponse.rates[fromCurrency];
+    const TO_RATE = currenciesResponse.rates[toCurrency];
+    const INPUT_VALUE = parseFloat(handleFloatingPoints(input));
+
+    const flowControl = {
+      to: () => {
+        setToValue(INPUT_VALUE);
+        const converted = handleFloatingPoints(
+          (INPUT_VALUE / TO_RATE) * FROM_RATE
+        );
+        setFromValue(converted);
+      },
+      from: () => {
+        setFromValue(INPUT_VALUE);
+        const converted = handleFloatingPoints(
+          (INPUT_VALUE / FROM_RATE) * TO_RATE
+        );
+        setToValue(converted);
+      },
+    };
+    flowControl[variant]();
   };
-
-  const convertToFrom = () => {
-    if (currenciesResponse && fromCurrency && toCurrency) {
-      const toRate = currenciesResponse.rates[toCurrency];
-      const valueDividedByRate = toValue / toRate;
-      const fromRate = currenciesResponse.rates[fromCurrency];
-      setFromValue(handleFloatingPoints(valueDividedByRate * fromRate));
-    }
-  };
-
-  useEffect(() => {
-    convertFromTo();
-  }, [fromValue, toCurrency]);
-
-  useEffect(() => {
-    convertToFrom();
-  }, [toValue, fromCurrency]);
 
   return (
     <Container className="cache-it-container" fixed>
@@ -127,7 +110,9 @@ const ConvertCurrency = () => {
               <TextField
                 type="number"
                 value={fromValue}
-                onChange={handleFromValueChange}
+                onChange={(e) => {
+                  handleConversion({ input: e, variant: VARIANTS.from });
+                }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -145,7 +130,9 @@ const ConvertCurrency = () => {
               <TextField
                 type="number"
                 value={toValue}
-                onChange={handleToValueChange}
+                onChange={(e) => {
+                  handleConversion({ input: e, variant: VARIANTS.to });
+                }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -160,7 +147,15 @@ const ConvertCurrency = () => {
           </Grid>
           <Grid item xs={6}>
             <CurrencyDropdown
-              handleChange={handleFromCurrencyChange}
+              handleChange={(e) => {
+                setFromCurrency(e.target.value);
+                if (fromValue) {
+                  handleConversion({
+                    input: { target: { value: fromValue } },
+                    variant: VARIANTS.from,
+                  });
+                }
+              }}
               variant="from"
               value={fromCurrency}
               currencyDropdownOptions={currencyRates}
@@ -171,7 +166,15 @@ const ConvertCurrency = () => {
           </Grid>
           <Grid item xs={6}>
             <CurrencyDropdown
-              handleChange={handleToCurrencyChange}
+              handleChange={(e) => {
+                setToCurrency(e.target.value);
+                if (toValue) {
+                  handleConversion({
+                    input: { target: { value: toValue } },
+                    variant: VARIANTS.to,
+                  });
+                }
+              }}
               variant="to"
               value={toCurrency}
               currencyDropdownOptions={currencyRates}
