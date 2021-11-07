@@ -1,18 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
+  Box,
   CircularProgress,
   Container,
   Grid,
-  InputAdornment,
   Paper,
   TextField,
   Typography,
 } from '@material-ui/core';
 import useGetCurrencyConversions from '../hooks/useGetCurrencyConversions';
 import CurrencyDropdown from './CurrencyDropdown';
-import getSymbolFromCurrency from 'currency-symbol-map';
-import currencyCodes from 'currency-codes';
-import Big from 'big.js';
+import parseStringLocale from '../util/parseStringLocale';
+import asLocaleString from '../util/asLocaleString';
+import { CONVERT_OPERATIONS } from '../constants/convertOperations';
+import handleFloatingPoints from '../util/handleFloatingPoints';
 
 const ConvertCurrency = () => {
   const [fromValue, setFromValue] = useState(1);
@@ -21,22 +22,6 @@ const ConvertCurrency = () => {
   const [toCurrency, setToCurrency] = useState('USD');
   const [defaultCurrencyDropdownOptions, setDefaultCurrencyDropdownOptions] =
     useState([]);
-
-  const handleFloatingPoints = (floatToHandle) => {
-    if (floatToHandle === '' || isNaN(floatToHandle)) {
-      return 0;
-    }
-    const cleanedNumber = new Big(floatToHandle.toString())
-      .toPrecision(5)
-      .toString();
-    console.log('floatToReturn', parseFloat(cleanedNumber));
-    return parseFloat(cleanedNumber);
-  };
-
-  const VARIANTS = {
-    to: 'to',
-    from: 'from',
-  };
 
   const { data: currenciesResponse, isLoading: isCurrencyLoading } =
     useGetCurrencyConversions(
@@ -68,122 +53,130 @@ const ConvertCurrency = () => {
     currencyRates = defaultCurrencyDropdownOptions;
   }
 
-  const handleConversion = ({ input: e, variant }) => {
-    const input = e.target.value;
+  const handleConversion = ({ input, convertOperation }) => {
+    if (!Object.keys(CONVERT_OPERATIONS).includes(convertOperation)) {
+      console.log(
+        `cannot convert by operation ${convertOperation}, must be either "to" or "from"`
+      );
+      return;
+    }
     if (input === '') {
-      setToValue('');
-      setFromValue('');
+      resetToAndFromValues();
       return;
     }
     const FROM_RATE = currenciesResponse.rates[fromCurrency];
     const TO_RATE = currenciesResponse.rates[toCurrency];
-    const INPUT_VALUE = parseFloat(handleFloatingPoints(input));
+    const INPUT_VALUE = handleFloatingPoints(input);
 
-    const flowControl = {
+    const convertBy = {
       to: () => {
-        setToValue(INPUT_VALUE);
+        setToValue(asLocaleString(INPUT_VALUE, toCurrency));
         const converted = handleFloatingPoints(
           (INPUT_VALUE / TO_RATE) * FROM_RATE
         );
-        setFromValue(converted);
+        setFromValue(asLocaleString(converted, fromCurrency));
       },
       from: () => {
-        setFromValue(INPUT_VALUE);
+        setFromValue(asLocaleString(INPUT_VALUE, fromCurrency));
         const converted = handleFloatingPoints(
           (INPUT_VALUE / FROM_RATE) * TO_RATE
         );
-        setToValue(converted);
+        setToValue(asLocaleString(converted, toCurrency));
       },
     };
-    flowControl[variant]();
+    convertBy[convertOperation]();
+  };
+
+  const resetToAndFromValues = () => {
+    setToValue('');
+    setFromValue('');
   };
 
   return (
-    <Container className="cache-it-container" fixed>
-      <h1>
-        <Typography>cache-it 🧺</Typography>
-      </h1>
-      <Paper className="cache-it-paper" variant="outlined" elavation={1}>
-        <Grid container spacing={3}>
-          <Grid item xs={6}>
-            {!isCurrencyLoading ? (
-              <TextField
-                type="number"
-                value={fromValue}
-                onChange={(e) => {
-                  handleConversion({ input: e, variant: VARIANTS.from });
-                }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      {getSymbolFromCurrency(fromCurrency)}
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            ) : (
-              <CircularProgress size={14} />
-            )}
-          </Grid>
-          <Grid item xs={6}>
-            {!isCurrencyLoading ? (
-              <TextField
-                type="number"
-                value={toValue}
-                onChange={(e) => {
-                  handleConversion({ input: e, variant: VARIANTS.to });
-                }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      {getSymbolFromCurrency(toCurrency)}
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            ) : (
-              <CircularProgress size={14} />
-            )}
-          </Grid>
-          <Grid item xs={6}>
+    <>
+      <Typography component="div">
+        <Box sx={{ textAlign: 'center', m: 1 }}>cache-it 🧺</Box>
+      </Typography>
+
+      <Container className="cache-it-container" fixed>
+        <Grid
+          container
+          direction="row"
+          justifyContent="center"
+          alignItems="center"
+          spacing="2"
+        >
+          <Grid item xs={2}>
             <CurrencyDropdown
               handleChange={(e) => {
                 setFromCurrency(e.target.value);
-                if (fromValue) {
-                  handleConversion({
-                    input: { target: { value: fromValue } },
-                    variant: VARIANTS.from,
-                  });
-                }
+                resetToAndFromValues();
               }}
-              variant="from"
+              convertOperation={CONVERT_OPERATIONS.from}
               value={fromCurrency}
               currencyDropdownOptions={currencyRates}
             />
-            <Typography>
-              {currencyCodes.code(fromCurrency)?.currency}
-            </Typography>
           </Grid>
-          <Grid item xs={6}>
+          <Grid item xs={2}>
+            {!isCurrencyLoading ? (
+              <>
+                <TextField
+                  label={CONVERT_OPERATIONS.from}
+                  type="text"
+                  value={fromValue}
+                  onChange={(e) => {
+                    const inputAsInt = parseStringLocale(e.target.value);
+                    handleConversion({
+                      input: inputAsInt,
+                      convertOperation: CONVERT_OPERATIONS.from,
+                    });
+                  }}
+                />
+              </>
+            ) : (
+              <CircularProgress size={14} />
+            )}
+          </Grid>
+        </Grid>
+        <Grid
+          container
+          direction="row"
+          justifyContent="center"
+          alignItems="center"
+          spacing="2"
+        >
+          <Grid item xs={2}>
             <CurrencyDropdown
               handleChange={(e) => {
                 setToCurrency(e.target.value);
-                if (toValue) {
-                  handleConversion({
-                    input: { target: { value: toValue } },
-                    variant: VARIANTS.to,
-                  });
-                }
+                resetToAndFromValues();
               }}
-              variant="to"
+              convertOperation={CONVERT_OPERATIONS.to}
               value={toCurrency}
               currencyDropdownOptions={currencyRates}
             />
-            <Typography>{currencyCodes.code(toCurrency)?.currency}</Typography>
+          </Grid>
+          <Grid item xs={2}>
+            {!isCurrencyLoading ? (
+              <TextField
+                label={CONVERT_OPERATIONS.to}
+                type="text"
+                value={toValue}
+                onChange={(e) => {
+                  const inputAsInt = parseStringLocale(e.target.value);
+                  handleConversion({
+                    input: inputAsInt,
+                    convertOperation: CONVERT_OPERATIONS.to,
+                  });
+                }}
+              />
+            ) : (
+              <CircularProgress size={14} />
+            )}
           </Grid>
         </Grid>
-      </Paper>
-    </Container>
+      </Container>
+    </>
   );
 };
 

@@ -8,35 +8,26 @@ import {
 } from '@material-ui/core';
 
 const CurrencyDropdown = ({
+  convertOperation = '',
   currencyDropdownOptions = [],
-  handleChange,
-  value,
-  variant,
+  handleChange = () => {},
+  value = '',
 }) => {
   const [open, setOpen] = useState(false);
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-  const handleOpen = () => {
-    setOpen(true);
-  };
-
   return (
     <div>
       <FormControl fullWidth>
-        <InputLabel id={`${variant}-currency-input-label`}>
-          <Typography>{variant}</Typography>
+        <InputLabel id={`${convertOperation}-currency-input-label`}>
+          <Typography>{convertOperation}</Typography>
         </InputLabel>
         <Select
-          labelId={`${variant}-currency-input`}
-          id={`${variant}-currency-input`}
+          labelId={`${convertOperation}-currency-input`}
+          id={`${convertOperation}-currency-input`}
           open={open}
-          onClose={handleClose}
-          onOpen={handleOpen}
+          onClose={() => setOpen(false)}
+          onOpen={() => setOpen(true)}
           value={value}
-          label={`${variant}`}
+          label={`${convertOperation}`}
           onChange={handleChange}
         >
           <MenuItem value="">
