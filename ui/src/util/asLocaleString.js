@@ -1,7 +1,7 @@
 import { getUserLocale } from 'get-user-locale';
 
 const asLocaleString = (intToLocaleStringify, currencyCode) => {
-    if (!intToLocaleStringify) {
+    if (!intToLocaleStringify || !currencyCode) {
       return '';
     }
     const userLocale = getUserLocale();

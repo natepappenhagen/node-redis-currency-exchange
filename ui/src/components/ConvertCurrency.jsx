@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Box,
   CircularProgress,
-  Container,
   Grid,
   Paper,
   TextField,
@@ -64,8 +63,8 @@ const ConvertCurrency = () => {
       resetToAndFromValues();
       return;
     }
-    const FROM_RATE = currenciesResponse.rates[fromCurrency];
-    const TO_RATE = currenciesResponse.rates[toCurrency];
+    const FROM_RATE = currenciesResponse?.rates[fromCurrency];
+    const TO_RATE = currenciesResponse?.rates[toCurrency];
     const INPUT_VALUE = handleFloatingPoints(input);
 
     const convertBy = {
@@ -93,12 +92,22 @@ const ConvertCurrency = () => {
   };
 
   return (
-    <>
-      <Typography component="div">
-        <Box sx={{ textAlign: 'center', m: 1 }}>cache-it 🧺</Box>
-      </Typography>
-
-      <Container className="cache-it-container" fixed>
+    <Grid
+      container
+      spacing={0}
+      direction="column"
+      alignItems="center"
+      justifyContent="center"
+      style={{ minHeight: '100vh' }}
+    >
+      <Grid item>
+        <Box sx={{ marginBottom: '5rem' }}>
+          <Typography component="div" variant="h2">
+            cache-it 🧺
+          </Typography>
+        </Box>
+      </Grid>
+      <Paper className="cache-it-paper" variant="outlined" elavation={1}>
         <Grid
           container
           direction="row"
@@ -106,7 +115,7 @@ const ConvertCurrency = () => {
           alignItems="center"
           spacing="2"
         >
-          <Grid item xs={2}>
+          <Grid item xs={6}>
             <CurrencyDropdown
               handleChange={(e) => {
                 setFromCurrency(e.target.value);
@@ -117,7 +126,7 @@ const ConvertCurrency = () => {
               currencyDropdownOptions={currencyRates}
             />
           </Grid>
-          <Grid item xs={2}>
+          <Grid item xs={6}>
             {!isCurrencyLoading ? (
               <>
                 <TextField
@@ -137,15 +146,7 @@ const ConvertCurrency = () => {
               <CircularProgress size={14} />
             )}
           </Grid>
-        </Grid>
-        <Grid
-          container
-          direction="row"
-          justifyContent="center"
-          alignItems="center"
-          spacing="2"
-        >
-          <Grid item xs={2}>
+          <Grid item xs={6}>
             <CurrencyDropdown
               handleChange={(e) => {
                 setToCurrency(e.target.value);
@@ -156,7 +157,7 @@ const ConvertCurrency = () => {
               currencyDropdownOptions={currencyRates}
             />
           </Grid>
-          <Grid item xs={2}>
+          <Grid item xs={6}>
             {!isCurrencyLoading ? (
               <TextField
                 label={CONVERT_OPERATIONS.to}
@@ -175,8 +176,8 @@ const ConvertCurrency = () => {
             )}
           </Grid>
         </Grid>
-      </Container>
-    </>
+      </Paper>
+    </Grid>
   );
 };
 
