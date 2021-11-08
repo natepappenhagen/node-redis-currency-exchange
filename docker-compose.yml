@@ -1,16 +1,16 @@
 services:
-  # ui:
-  #     container_name: ui
-  #     build:
-  #         context: ./ui
-  #         dockerfile: Dockerfile
-  #     depends_on:
-  #         - redis
-  #         - api
-  #     ports:
-  #         - "3000:3000"
-  #     volumes:
-  #         - ./client:/usr/src/app/ui
+  ui:
+    container_name: ui
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    depends_on:
+      - redis
+      - api
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./client:/usr/src/app/ui
   api:
     container_name: api
     build:
