@@ -2,9 +2,9 @@ import axios from 'axios';
 import { useQuery } from 'react-query';
 /*
    API that connects to the ./api in this project.
-   'http://localhost:5000/cached-currency-delta?base=:baseCurrency'
+   'http://localhost:5050/cached-currency-delta?base=:baseCurrency'
 */
-const API_URL = 'http://localhost:5000/cached-currency-delta';
+const API_URL = 'http://localhost:5050/cached-currency-delta';
 
 /*
    original API_URL ( rate limited )

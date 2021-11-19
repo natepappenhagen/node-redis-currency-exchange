@@ -183,7 +183,7 @@ app.get('/cached-currency-delta', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5050;
 
 app.listen(PORT, () => {
   console.log(chalk.cyan(`🎧 Server started at port: ${chalk.bgWhite(PORT)}`));
